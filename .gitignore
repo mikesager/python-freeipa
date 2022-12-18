@@ -17,3 +17,4 @@
 *.sw*
 /.pytest_cache
 /.tox
+venv

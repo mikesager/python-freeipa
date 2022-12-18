@@ -2,7 +2,7 @@ from python_freeipa.client import Client
 
 
 class ClientMeta(Client):
-    version = '2.235'
+    version = '2.251'
 
     def __init__(self, host=None, verify_ssl=True, dns_discovery=True):
         super(ClientMeta, self).__init__(host=host, verify_ssl=verify_ssl, version=self.version, dns_discovery=dns_discovery)
@@ -608,7 +608,6 @@ class ClientMeta(Client):
     def automember_default_group_remove(
         self,
         o_type,
-        o_description=None,
         o_all=True,
         o_raw=False,
         **kwargs
@@ -617,8 +616,6 @@ class ClientMeta(Client):
         Remove default (fallback) group for all unmatched entries.
 
 
-        :param o_description: A description of this auto member rule
-        :type  o_description: str
         :param o_type: Grouping to which the rule applies
         :type  o_type: str, valid values ['group', 'hostgroup']
         :param o_all: Retrieve and print all attributes from the server.
@@ -633,8 +630,6 @@ class ClientMeta(Client):
         _args = list()
 
         _params = dict()
-        if o_description is not None:
-            _params['description'] = o_description
         _params['type'] = o_type
         _params['all'] = o_all
         _params['raw'] = o_raw
@@ -647,7 +642,6 @@ class ClientMeta(Client):
         self,
         o_automemberdefaultgroup,
         o_type,
-        o_description=None,
         o_all=True,
         o_raw=False,
         **kwargs
@@ -656,8 +650,6 @@ class ClientMeta(Client):
         Set default (fallback) group for all unmatched entries.
 
 
-        :param o_description: A description of this auto member rule
-        :type  o_description: str
         :param o_automemberdefaultgroup: Default (fallback) group for entries
             to land
         :type  o_automemberdefaultgroup: str
@@ -675,8 +667,6 @@ class ClientMeta(Client):
         _args = list()
 
         _params = dict()
-        if o_description is not None:
-            _params['description'] = o_description
         _params['automemberdefaultgroup'] = o_automemberdefaultgroup
         _params['type'] = o_type
         _params['all'] = o_all
@@ -1949,7 +1939,7 @@ class ClientMeta(Client):
         **kwargs
     ):
         """
-        Delete a CA.
+        Delete a CA (must be disabled first).
 
 
         :param a_cn: Name for referencing the CA
@@ -3067,6 +3057,7 @@ class ClientMeta(Client):
         o_issuedon_to=None,
         o_revokedon_from=None,
         o_revokedon_to=None,
+        o_status=None,
         o_pkey_only=False,
         o_timelimit=None,
         o_sizelimit=None,
@@ -3122,6 +3113,8 @@ class ClientMeta(Client):
         :type  o_revokedon_from: DateTime
         :param o_revokedon_to: Revoked on to this date (YYYY-mm-dd)
         :type  o_revokedon_to: DateTime
+        :param o_status: Status of the certificate
+        :type  o_status: str, valid values ['VALID', 'INVALID', 'REVOKED', 'EXPIRED', 'REVOKED_EXPIRED']
         :param o_pkey_only: Results should contain primary key attribute only
             ("certificate")
         :type  o_pkey_only: bool
@@ -3190,6 +3183,8 @@ class ClientMeta(Client):
             _params['revokedon_from'] = o_revokedon_from
         if o_revokedon_to is not None:
             _params['revokedon_to'] = o_revokedon_to
+        if o_status is not None:
+            _params['status'] = o_status
         if o_pkey_only is not None:
             _params['pkey_only'] = o_pkey_only
         if o_timelimit is not None:
@@ -4404,8 +4399,12 @@ class ClientMeta(Client):
         o_ipaselinuxusermapdefault=None,
         o_ipakrbauthzdata=None,
         o_ipauserauthtype=None,
+        o_ipauserdefaultsubordinateid=None,
         o_ca_renewal_master_server=None,
         o_ipadomainresolutionorder=None,
+        o_enable_sid=False,
+        o_add_sids=False,
+        o_netbios_name=None,
         o_setattr=None,
         o_addattr=None,
         o_delattr=None,
@@ -4465,13 +4464,23 @@ class ClientMeta(Client):
         :type  o_ipakrbauthzdata: list of str, valid values ['MS-PAC', 'PAD', 'nfs:NONE']
         :param o_ipauserauthtype: Default types of supported user
             authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'disabled']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp', 'disabled']
+        :param o_ipauserdefaultsubordinateid: Enable adding subids to new
+            users
+        :type  o_ipauserdefaultsubordinateid: Bool
         :param o_ca_renewal_master_server: Renewal master for IPA certificate
             authority
         :type  o_ca_renewal_master_server: str
         :param o_ipadomainresolutionorder: colon-separated list of domains
             used for short name qualification
         :type  o_ipadomainresolutionorder: str
+        :param o_enable_sid: New users and groups automatically get a SID
+            assigned
+        :type  o_enable_sid: bool
+        :param o_add_sids: Add SIDs for existing users and groups
+        :type  o_add_sids: bool
+        :param o_netbios_name: NetBIOS name of the IPA domain
+        :type  o_netbios_name: str
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -4535,10 +4544,18 @@ class ClientMeta(Client):
             _params['ipakrbauthzdata'] = o_ipakrbauthzdata
         if o_ipauserauthtype is not None:
             _params['ipauserauthtype'] = o_ipauserauthtype
+        if o_ipauserdefaultsubordinateid is not None:
+            _params['ipauserdefaultsubordinateid'] = o_ipauserdefaultsubordinateid
         if o_ca_renewal_master_server is not None:
             _params['ca_renewal_master_server'] = o_ca_renewal_master_server
         if o_ipadomainresolutionorder is not None:
             _params['ipadomainresolutionorder'] = o_ipadomainresolutionorder
+        if o_enable_sid is not None:
+            _params['enable_sid'] = o_enable_sid
+        if o_add_sids is not None:
+            _params['add_sids'] = o_add_sids
+        if o_netbios_name is not None:
+            _params['netbios_name'] = o_netbios_name
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -5751,7 +5768,7 @@ class ClientMeta(Client):
         :param a_idnsname: Record name
         :type  a_idnsname: DNSNameParam
         :param o_dnsttl: Time to live
-        :type  o_dnsttl: int, min value -2147483648, max value 2147483647
+        :type  o_dnsttl: int, min value 0, max value 2147483647
         :param o_dnsclass: <dnsclass>
         :type  o_dnsclass: str, valid values ['IN', 'CS', 'CH', 'HS']
         :param o_arecord: Raw A records
@@ -6222,7 +6239,7 @@ class ClientMeta(Client):
         :param a_idnsname: Record name
         :type  a_idnsname: DNSNameParam
         :param o_dnsttl: Time to live
-        :type  o_dnsttl: int, min value -2147483648, max value 2147483647
+        :type  o_dnsttl: int, min value 0, max value 2147483647
         :param o_dnsclass: <dnsclass>
         :type  o_dnsclass: str, valid values ['IN', 'CS', 'CH', 'HS']
         :param o_arecord: Raw A records
@@ -6459,7 +6476,7 @@ class ClientMeta(Client):
         :param o_idnsname: Record name
         :type  o_idnsname: DNSNameParam
         :param o_dnsttl: Time to live
-        :type  o_dnsttl: int, min value -2147483648, max value 2147483647
+        :type  o_dnsttl: int, min value 0, max value 2147483647
         :param o_dnsclass: <dnsclass>
         :type  o_dnsclass: str, valid values ['IN', 'CS', 'CH', 'HS']
         :param o_arecord: Raw A records
@@ -6740,7 +6757,7 @@ class ClientMeta(Client):
         :param a_idnsname: Record name
         :type  a_idnsname: DNSNameParam
         :param o_dnsttl: Time to live
-        :type  o_dnsttl: int, min value -2147483648, max value 2147483647
+        :type  o_dnsttl: int, min value 0, max value 2147483647
         :param o_dnsclass: <dnsclass>
         :type  o_dnsclass: str, valid values ['IN', 'CS', 'CH', 'HS']
         :param o_arecord: Raw A records
@@ -7425,12 +7442,12 @@ class ClientMeta(Client):
     def dnszone_add(
         self,
         a_idnsname,
-        o_idnssoaserial,
         o_name_from_ip=None,
         o_idnsforwarders=None,
         o_idnsforwardpolicy=None,
         o_idnssoamname=None,
         o_idnssoarname='',
+        o_idnssoaserial=None,
         o_idnssoarefresh=3600,
         o_idnssoaretry=900,
         o_idnssoaexpire=1209600,
@@ -7551,7 +7568,8 @@ class ClientMeta(Client):
         if o_idnssoamname is not None:
             _params['idnssoamname'] = o_idnssoamname
         _params['idnssoarname'] = o_idnssoarname
-        _params['idnssoaserial'] = o_idnssoaserial
+        if o_idnssoaserial is not None:
+            _params['idnssoaserial'] = o_idnssoaserial
         _params['idnssoarefresh'] = o_idnssoarefresh
         _params['idnssoaretry'] = o_idnssoaretry
         _params['idnssoaexpire'] = o_idnssoaexpire
@@ -8244,6 +8262,7 @@ class ClientMeta(Client):
         o_user=None,
         o_group=None,
         o_service=None,
+        o_idoverrideuser=None,
         **kwargs
     ):
         """
@@ -8269,6 +8288,8 @@ class ClientMeta(Client):
         :type  o_group: str
         :param o_service: services to add
         :type  o_service: str
+        :param o_idoverrideuser: User ID overrides to add
+        :type  o_idoverrideuser: str
         """
         method = 'group_add_member'
 
@@ -8287,6 +8308,8 @@ class ClientMeta(Client):
             _params['group'] = o_group
         if o_service is not None:
             _params['service'] = o_service
+        if o_idoverrideuser is not None:
+            _params['idoverrideuser'] = o_idoverrideuser
 
         _params.update(kwargs)
 
@@ -8411,6 +8434,8 @@ class ClientMeta(Client):
         o_no_group=None,
         o_service=None,
         o_no_service=None,
+        o_idoverrideuser=None,
+        o_no_idoverrideuser=None,
         o_in_group=None,
         o_not_in_group=None,
         o_in_netgroup=None,
@@ -8476,6 +8501,12 @@ class ClientMeta(Client):
         :type  o_service: Principal
         :param o_no_service: Search for groups without these member services.
         :type  o_no_service: Principal
+        :param o_idoverrideuser: Search for groups with these member User ID
+            overrides.
+        :type  o_idoverrideuser: str
+        :param o_no_idoverrideuser: Search for groups without these member
+            User ID overrides.
+        :type  o_no_idoverrideuser: str
         :param o_in_group: Search for groups with these member of groups.
         :type  o_in_group: str
         :param o_not_in_group: Search for groups without these member of
@@ -8553,6 +8584,10 @@ class ClientMeta(Client):
             _params['service'] = o_service
         if o_no_service is not None:
             _params['no_service'] = o_no_service
+        if o_idoverrideuser is not None:
+            _params['idoverrideuser'] = o_idoverrideuser
+        if o_no_idoverrideuser is not None:
+            _params['no_idoverrideuser'] = o_no_idoverrideuser
         if o_in_group is not None:
             _params['in_group'] = o_in_group
         if o_not_in_group is not None:
@@ -8681,6 +8716,7 @@ class ClientMeta(Client):
         o_user=None,
         o_group=None,
         o_service=None,
+        o_idoverrideuser=None,
         **kwargs
     ):
         """
@@ -8706,6 +8742,8 @@ class ClientMeta(Client):
         :type  o_group: str
         :param o_service: services to remove
         :type  o_service: str
+        :param o_idoverrideuser: User ID overrides to remove
+        :type  o_idoverrideuser: str
         """
         method = 'group_remove_member'
 
@@ -8724,6 +8762,8 @@ class ClientMeta(Client):
             _params['group'] = o_group
         if o_service is not None:
             _params['service'] = o_service
+        if o_idoverrideuser is not None:
+            _params['idoverrideuser'] = o_idoverrideuser
 
         _params.update(kwargs)
 
@@ -10321,13 +10361,14 @@ class ClientMeta(Client):
         :type  o_userclass: str
         :param o_ipaassignedidview: Assigned ID View
         :type  o_ipaassignedidview: str
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
-            force hardened password authentication by SPAKE or FAST. With no
-            indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+            force hardened password authentication by SPAKE or FAST. Use 'idp' to
+            allow External Identity Provider authentications. With no indicator
+            specified, all authentication mechanisms are allowed.
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_ipakrbrequirespreauth: Pre-authentication is required for the
             service
         :type  o_ipakrbrequirespreauth: Bool
@@ -10888,13 +10929,14 @@ class ClientMeta(Client):
         :type  o_userclass: str
         :param o_ipaassignedidview: Assigned ID View
         :type  o_ipaassignedidview: str
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
-            force hardened password authentication by SPAKE or FAST. With no
-            indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+            force hardened password authentication by SPAKE or FAST. Use 'idp' to
+            allow External Identity Provider authentications. With no indicator
+            specified, all authentication mechanisms are allowed.
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
         :param o_sizelimit: Maximum number of entries returned (0 is
@@ -11094,13 +11136,14 @@ class ClientMeta(Client):
         :type  o_userclass: str
         :param o_ipaassignedidview: Assigned ID View
         :type  o_ipaassignedidview: str
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
-            force hardened password authentication by SPAKE or FAST. With no
-            indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+            force hardened password authentication by SPAKE or FAST. Use 'idp' to
+            allow External Identity Provider authentications. With no indicator
+            specified, all authentication mechanisms are allowed.
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_ipakrbrequirespreauth: Pre-authentication is required for the
             service
         :type  o_ipakrbrequirespreauth: Bool
@@ -11707,6 +11750,7 @@ class ClientMeta(Client):
         o_all=True,
         o_raw=False,
         o_no_members=False,
+        o_rename=None,
         **kwargs
     ):
         """
@@ -11738,6 +11782,8 @@ class ClientMeta(Client):
         :type  o_raw: bool
         :param o_no_members: Suppress processing of membership attributes.
         :type  o_no_members: bool
+        :param o_rename: Rename the host group object
+        :type  o_rename: str
         """
         method = 'hostgroup_mod'
 
@@ -11757,6 +11803,8 @@ class ClientMeta(Client):
         _params['all'] = o_all
         _params['raw'] = o_raw
         _params['no_members'] = o_no_members
+        if o_rename is not None:
+            _params['rename'] = o_rename
 
         _params.update(kwargs)
 
@@ -12259,6 +12307,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=False,
         **kwargs
     ):
         """
@@ -12305,6 +12354,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         """
         method = 'idoverrideuser_add'
 
@@ -12341,6 +12392,7 @@ class ClientMeta(Client):
             _params['fallback_to_ldap'] = o_fallback_to_ldap
         _params['all'] = o_all
         _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
 
         _params.update(kwargs)
 
@@ -12354,6 +12406,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=False,
         **kwargs
     ):
         """
@@ -12373,6 +12426,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         :param o_usercertificate: Base-64 encoded user certificate
         :type  o_usercertificate: Certificate
         """
@@ -12387,6 +12442,7 @@ class ClientMeta(Client):
             _params['fallback_to_ldap'] = o_fallback_to_ldap
         _params['all'] = o_all
         _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
         _params['usercertificate'] = o_usercertificate
 
         _params.update(kwargs)
@@ -12448,6 +12504,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=True,
         o_pkey_only=False,
         **kwargs
     ):
@@ -12491,6 +12548,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         :param o_pkey_only: Results should contain primary key attribute only
             ("anchor")
         :type  o_pkey_only: bool
@@ -12528,6 +12587,7 @@ class ClientMeta(Client):
             _params['fallback_to_ldap'] = o_fallback_to_ldap
         _params['all'] = o_all
         _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
         if o_pkey_only is not None:
             _params['pkey_only'] = o_pkey_only
 
@@ -12556,6 +12616,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=False,
         o_rename=None,
         **kwargs
     ):
@@ -12609,6 +12670,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         :param o_rename: Rename the User ID override object
         :type  o_rename: str
         """
@@ -12650,6 +12713,7 @@ class ClientMeta(Client):
             _params['fallback_to_ldap'] = o_fallback_to_ldap
         _params['all'] = o_all
         _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
         if o_rename is not None:
             _params['rename'] = o_rename
 
@@ -12665,6 +12729,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=False,
         **kwargs
     ):
         """
@@ -12684,6 +12749,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         :param o_usercertificate: Base-64 encoded user certificate
         :type  o_usercertificate: Certificate
         """
@@ -12698,6 +12765,7 @@ class ClientMeta(Client):
             _params['fallback_to_ldap'] = o_fallback_to_ldap
         _params['all'] = o_all
         _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
         _params['usercertificate'] = o_usercertificate
 
         _params.update(kwargs)
@@ -12712,6 +12780,7 @@ class ClientMeta(Client):
         o_fallback_to_ldap=False,
         o_all=True,
         o_raw=False,
+        o_no_members=False,
         **kwargs
     ):
         """
@@ -12734,6 +12803,8 @@ class ClientMeta(Client):
         :param o_raw: Print entries as stored on the server. Only affects
             output format.
         :type  o_raw: bool
+        :param o_no_members: Suppress processing of membership attributes.
+        :type  o_no_members: bool
         """
         method = 'idoverrideuser_show'
 
@@ -12745,6 +12816,403 @@ class ClientMeta(Client):
         _params['rights'] = o_rights
         if o_fallback_to_ldap is not None:
             _params['fallback_to_ldap'] = o_fallback_to_ldap
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+        _params['no_members'] = o_no_members
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def idp_add(
+        self,
+        a_cn,
+        o_ipaidpclientid,
+        o_ipaidpauthendpoint=None,
+        o_ipaidpdevauthendpoint=None,
+        o_ipaidptokenendpoint=None,
+        o_ipaidpuserinfoendpoint=None,
+        o_ipaidpkeysendpoint=None,
+        o_ipaidpissuerurl=None,
+        o_ipaidpclientsecret=None,
+        o_ipaidpscope=None,
+        o_ipaidpsub=None,
+        o_setattr=None,
+        o_addattr=None,
+        o_ipaidpprovider=None,
+        o_ipaidporg=None,
+        o_ipaidpbaseurl=None,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Add a new Identity Provider server.
+
+
+        :param a_cn: Identity Provider server name
+        :type  a_cn: str
+        :param o_ipaidpauthendpoint: OAuth 2.0 authorization endpoint
+        :type  o_ipaidpauthendpoint: str
+        :param o_ipaidpdevauthendpoint: Device authorization endpoint
+        :type  o_ipaidpdevauthendpoint: str
+        :param o_ipaidptokenendpoint: Token endpoint
+        :type  o_ipaidptokenendpoint: str
+        :param o_ipaidpuserinfoendpoint: User information endpoint
+        :type  o_ipaidpuserinfoendpoint: str
+        :param o_ipaidpkeysendpoint: JWKS endpoint
+        :type  o_ipaidpkeysendpoint: str
+        :param o_ipaidpissuerurl: The Identity Provider OIDC URL
+        :type  o_ipaidpissuerurl: str
+        :param o_ipaidpclientid: OAuth 2.0 client identifier
+        :type  o_ipaidpclientid: str
+        :param o_ipaidpclientsecret: OAuth 2.0 client secret
+        :type  o_ipaidpclientsecret: Password
+        :param o_ipaidpscope: OAuth 2.0 scope. Multiple scopes separated by
+            space
+        :type  o_ipaidpscope: str
+        :param o_ipaidpsub: Attribute for user identity in OAuth 2.0 userinfo
+        :type  o_ipaidpsub: str
+        :param o_setattr: Set an attribute to a name/value pair. Format is
+            attr=value. For multi-valued attributes, the command replaces the
+            values already present.
+        :type  o_setattr: str
+        :param o_addattr: Add an attribute/value pair. Format is attr=value.
+            The attribute must be part of the schema.
+        :type  o_addattr: str
+        :param o_ipaidpprovider: Choose a pre-defined template to use
+        :type  o_ipaidpprovider: str, valid values ['google', 'github', 'microsoft', 'okta', 'keycloak']
+        :param o_ipaidporg: Organization ID or Realm name for IdP provider
+            templates
+        :type  o_ipaidporg: str
+        :param o_ipaidpbaseurl: Base URL for IdP provider templates
+        :type  o_ipaidpbaseurl: str
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'idp_add'
+
+        _args = list()
+        _args.append(a_cn)
+
+        _params = dict()
+        if o_ipaidpauthendpoint is not None:
+            _params['ipaidpauthendpoint'] = o_ipaidpauthendpoint
+        if o_ipaidpdevauthendpoint is not None:
+            _params['ipaidpdevauthendpoint'] = o_ipaidpdevauthendpoint
+        if o_ipaidptokenendpoint is not None:
+            _params['ipaidptokenendpoint'] = o_ipaidptokenendpoint
+        if o_ipaidpuserinfoendpoint is not None:
+            _params['ipaidpuserinfoendpoint'] = o_ipaidpuserinfoendpoint
+        if o_ipaidpkeysendpoint is not None:
+            _params['ipaidpkeysendpoint'] = o_ipaidpkeysendpoint
+        if o_ipaidpissuerurl is not None:
+            _params['ipaidpissuerurl'] = o_ipaidpissuerurl
+        _params['ipaidpclientid'] = o_ipaidpclientid
+        if o_ipaidpclientsecret is not None:
+            _params['ipaidpclientsecret'] = o_ipaidpclientsecret
+        if o_ipaidpscope is not None:
+            _params['ipaidpscope'] = o_ipaidpscope
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
+        if o_setattr is not None:
+            _params['setattr'] = o_setattr
+        if o_addattr is not None:
+            _params['addattr'] = o_addattr
+        if o_ipaidpprovider is not None:
+            _params['ipaidpprovider'] = o_ipaidpprovider
+        if o_ipaidporg is not None:
+            _params['ipaidporg'] = o_ipaidporg
+        if o_ipaidpbaseurl is not None:
+            _params['ipaidpbaseurl'] = o_ipaidpbaseurl
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def idp_del(
+        self,
+        a_cn,
+        o_continue=False,
+        **kwargs
+    ):
+        """
+        Delete an Identity Provider server.
+
+
+        :param a_cn: Identity Provider server name
+        :type  a_cn: str
+        :param o_continue: Continuous mode: Don't stop on errors.
+        :type  o_continue: bool
+        """
+        method = 'idp_del'
+
+        _args = list()
+        _args.append(a_cn)
+
+        _params = dict()
+        _params['continue'] = o_continue
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def idp_find(
+        self,
+        a_criteria=None,
+        o_cn=None,
+        o_ipaidpauthendpoint=None,
+        o_ipaidpdevauthendpoint=None,
+        o_ipaidptokenendpoint=None,
+        o_ipaidpuserinfoendpoint=None,
+        o_ipaidpkeysendpoint=None,
+        o_ipaidpissuerurl=None,
+        o_ipaidpclientid=None,
+        o_ipaidpclientsecret=None,
+        o_ipaidpscope=None,
+        o_ipaidpsub=None,
+        o_timelimit=None,
+        o_sizelimit=None,
+        o_all=True,
+        o_raw=False,
+        o_pkey_only=False,
+        **kwargs
+    ):
+        """
+        Search for Identity Provider servers.
+
+
+        :param a_criteria: A string searched in all relevant object attributes
+        :type  a_criteria: str
+        :param o_cn: Identity Provider server name
+        :type  o_cn: str
+        :param o_ipaidpauthendpoint: OAuth 2.0 authorization endpoint
+        :type  o_ipaidpauthendpoint: str
+        :param o_ipaidpdevauthendpoint: Device authorization endpoint
+        :type  o_ipaidpdevauthendpoint: str
+        :param o_ipaidptokenendpoint: Token endpoint
+        :type  o_ipaidptokenendpoint: str
+        :param o_ipaidpuserinfoendpoint: User information endpoint
+        :type  o_ipaidpuserinfoendpoint: str
+        :param o_ipaidpkeysendpoint: JWKS endpoint
+        :type  o_ipaidpkeysendpoint: str
+        :param o_ipaidpissuerurl: The Identity Provider OIDC URL
+        :type  o_ipaidpissuerurl: str
+        :param o_ipaidpclientid: OAuth 2.0 client identifier
+        :type  o_ipaidpclientid: str
+        :param o_ipaidpclientsecret: OAuth 2.0 client secret
+        :type  o_ipaidpclientsecret: Password
+        :param o_ipaidpscope: OAuth 2.0 scope. Multiple scopes separated by
+            space
+        :type  o_ipaidpscope: str
+        :param o_ipaidpsub: Attribute for user identity in OAuth 2.0 userinfo
+        :type  o_ipaidpsub: str
+        :param o_timelimit: Time limit of search in seconds (0 is unlimited)
+        :type  o_timelimit: int, min value 0, max value 2147483647
+        :param o_sizelimit: Maximum number of entries returned (0 is
+            unlimited)
+        :type  o_sizelimit: int, min value 0, max value 2147483647
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        :param o_pkey_only: Results should contain primary key attribute only
+            ("name")
+        :type  o_pkey_only: bool
+        """
+        method = 'idp_find'
+
+        _args = list()
+        _args.append(a_criteria)
+
+        _params = dict()
+        if o_cn is not None:
+            _params['cn'] = o_cn
+        if o_ipaidpauthendpoint is not None:
+            _params['ipaidpauthendpoint'] = o_ipaidpauthendpoint
+        if o_ipaidpdevauthendpoint is not None:
+            _params['ipaidpdevauthendpoint'] = o_ipaidpdevauthendpoint
+        if o_ipaidptokenendpoint is not None:
+            _params['ipaidptokenendpoint'] = o_ipaidptokenendpoint
+        if o_ipaidpuserinfoendpoint is not None:
+            _params['ipaidpuserinfoendpoint'] = o_ipaidpuserinfoendpoint
+        if o_ipaidpkeysendpoint is not None:
+            _params['ipaidpkeysendpoint'] = o_ipaidpkeysendpoint
+        if o_ipaidpissuerurl is not None:
+            _params['ipaidpissuerurl'] = o_ipaidpissuerurl
+        if o_ipaidpclientid is not None:
+            _params['ipaidpclientid'] = o_ipaidpclientid
+        if o_ipaidpclientsecret is not None:
+            _params['ipaidpclientsecret'] = o_ipaidpclientsecret
+        if o_ipaidpscope is not None:
+            _params['ipaidpscope'] = o_ipaidpscope
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
+        if o_timelimit is not None:
+            _params['timelimit'] = o_timelimit
+        if o_sizelimit is not None:
+            _params['sizelimit'] = o_sizelimit
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+        if o_pkey_only is not None:
+            _params['pkey_only'] = o_pkey_only
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def idp_mod(
+        self,
+        a_cn,
+        o_ipaidpauthendpoint=None,
+        o_ipaidpdevauthendpoint=None,
+        o_ipaidptokenendpoint=None,
+        o_ipaidpuserinfoendpoint=None,
+        o_ipaidpkeysendpoint=None,
+        o_ipaidpissuerurl=None,
+        o_ipaidpclientid=None,
+        o_ipaidpclientsecret=None,
+        o_ipaidpscope=None,
+        o_ipaidpsub=None,
+        o_setattr=None,
+        o_addattr=None,
+        o_delattr=None,
+        o_rights=False,
+        o_all=True,
+        o_raw=False,
+        o_rename=None,
+        **kwargs
+    ):
+        """
+        Modify an Identity Provider server.
+
+
+        :param a_cn: Identity Provider server name
+        :type  a_cn: str
+        :param o_ipaidpauthendpoint: OAuth 2.0 authorization endpoint
+        :type  o_ipaidpauthendpoint: str
+        :param o_ipaidpdevauthendpoint: Device authorization endpoint
+        :type  o_ipaidpdevauthendpoint: str
+        :param o_ipaidptokenendpoint: Token endpoint
+        :type  o_ipaidptokenendpoint: str
+        :param o_ipaidpuserinfoendpoint: User information endpoint
+        :type  o_ipaidpuserinfoendpoint: str
+        :param o_ipaidpkeysendpoint: JWKS endpoint
+        :type  o_ipaidpkeysendpoint: str
+        :param o_ipaidpissuerurl: The Identity Provider OIDC URL
+        :type  o_ipaidpissuerurl: str
+        :param o_ipaidpclientid: OAuth 2.0 client identifier
+        :type  o_ipaidpclientid: str
+        :param o_ipaidpclientsecret: OAuth 2.0 client secret
+        :type  o_ipaidpclientsecret: Password
+        :param o_ipaidpscope: OAuth 2.0 scope. Multiple scopes separated by
+            space
+        :type  o_ipaidpscope: str
+        :param o_ipaidpsub: Attribute for user identity in OAuth 2.0 userinfo
+        :type  o_ipaidpsub: str
+        :param o_setattr: Set an attribute to a name/value pair. Format is
+            attr=value. For multi-valued attributes, the command replaces the
+            values already present.
+        :type  o_setattr: str
+        :param o_addattr: Add an attribute/value pair. Format is attr=value.
+            The attribute must be part of the schema.
+        :type  o_addattr: str
+        :param o_delattr: Delete an attribute/value pair. The option will be
+            evaluated last, after all sets and adds.
+        :type  o_delattr: str
+        :param o_rights: Display the access rights of this entry (requires
+            --all). See ipa man page for details.
+        :type  o_rights: bool
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        :param o_rename: Rename the Identity Provider server object
+        :type  o_rename: str
+        """
+        method = 'idp_mod'
+
+        _args = list()
+        _args.append(a_cn)
+
+        _params = dict()
+        if o_ipaidpauthendpoint is not None:
+            _params['ipaidpauthendpoint'] = o_ipaidpauthendpoint
+        if o_ipaidpdevauthendpoint is not None:
+            _params['ipaidpdevauthendpoint'] = o_ipaidpdevauthendpoint
+        if o_ipaidptokenendpoint is not None:
+            _params['ipaidptokenendpoint'] = o_ipaidptokenendpoint
+        if o_ipaidpuserinfoendpoint is not None:
+            _params['ipaidpuserinfoendpoint'] = o_ipaidpuserinfoendpoint
+        if o_ipaidpkeysendpoint is not None:
+            _params['ipaidpkeysendpoint'] = o_ipaidpkeysendpoint
+        if o_ipaidpissuerurl is not None:
+            _params['ipaidpissuerurl'] = o_ipaidpissuerurl
+        if o_ipaidpclientid is not None:
+            _params['ipaidpclientid'] = o_ipaidpclientid
+        if o_ipaidpclientsecret is not None:
+            _params['ipaidpclientsecret'] = o_ipaidpclientsecret
+        if o_ipaidpscope is not None:
+            _params['ipaidpscope'] = o_ipaidpscope
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
+        if o_setattr is not None:
+            _params['setattr'] = o_setattr
+        if o_addattr is not None:
+            _params['addattr'] = o_addattr
+        if o_delattr is not None:
+            _params['delattr'] = o_delattr
+        _params['rights'] = o_rights
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+        if o_rename is not None:
+            _params['rename'] = o_rename
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def idp_show(
+        self,
+        a_cn,
+        o_rights=False,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Display information about an Identity Provider server.
+
+
+        :param a_cn: Identity Provider server name
+        :type  a_cn: str
+        :param o_rights: Display the access rights of this entry (requires
+            --all). See ipa man page for details.
+        :type  o_rights: bool
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'idp_show'
+
+        _args = list()
+        _args.append(a_cn)
+
+        _params = dict()
+        _params['rights'] = o_rights
         _params['all'] = o_all
         _params['raw'] = o_raw
 
@@ -12762,6 +13230,7 @@ class ClientMeta(Client):
         o_ipanttrusteddomainsid=None,
         o_ipanttrusteddomainname=None,
         o_iparangetype=None,
+        o_ipaautoprivategroups=None,
         o_setattr=None,
         o_addattr=None,
         o_all=True,
@@ -12783,12 +13252,16 @@ class ClientMeta(Client):
 
             may be given for a new ID range for the local domain while
 
+                --auto-private-groups
+
+            may be given for a new ID range for a trusted AD domain and
+
                 --rid-base
                 --dom-sid
 
             must be given to add a new range for a trusted AD domain.
 
-        =======
+        -------
         WARNING:
 
         DNA plugin in 389-ds will allocate IDs based on the ranges configured for the
@@ -12799,15 +13272,16 @@ class ClientMeta(Client):
         the new local range. Specifically, The dnaNextRange attribute of 'cn=Posix
         IDs,cn=Distributed Numeric Assignment Plugin,cn=plugins,cn=config' has to be
         modified to match the new range.
-        =======
+
+        -------
 
 
         :param a_cn: Range name
         :type  a_cn: str
         :param o_ipabaseid: First Posix ID of the range
-        :type  o_ipabaseid: int, min value -2147483648, max value 2147483647
+        :type  o_ipabaseid: int, min value 1, max value 4294967295
         :param o_ipaidrangesize: Number of IDs in the range
-        :type  o_ipaidrangesize: int, min value -2147483648, max value 2147483647
+        :type  o_ipaidrangesize: int, min value 1, max value 4294967295
         :param o_ipabaserid: First RID of the corresponding RID range
         :type  o_ipabaserid: int, min value -2147483648, max value 2147483647
         :param o_ipasecondarybaserid: First RID of the secondary RID range
@@ -12818,6 +13292,9 @@ class ClientMeta(Client):
         :type  o_ipanttrusteddomainname: str
         :param o_iparangetype: ID range type, one of allowed values
         :type  o_iparangetype: str, valid values ['ipa-ad-trust', 'ipa-ad-trust-posix', 'ipa-local']
+        :param o_ipaautoprivategroups: Auto creation of private groups, one of
+            allowed values
+        :type  o_ipaautoprivategroups: str, valid values ['true', 'false', 'hybrid']
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -12850,6 +13327,8 @@ class ClientMeta(Client):
             _params['ipanttrusteddomainname'] = o_ipanttrusteddomainname
         if o_iparangetype is not None:
             _params['iparangetype'] = o_iparangetype
+        if o_ipaautoprivategroups is not None:
+            _params['ipaautoprivategroups'] = o_ipaautoprivategroups
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -12898,6 +13377,7 @@ class ClientMeta(Client):
         o_ipasecondarybaserid=None,
         o_ipanttrusteddomainsid=None,
         o_iparangetype=None,
+        o_ipaautoprivategroups=None,
         o_timelimit=None,
         o_sizelimit=None,
         o_all=True,
@@ -12914,9 +13394,9 @@ class ClientMeta(Client):
         :param o_cn: Range name
         :type  o_cn: str
         :param o_ipabaseid: First Posix ID of the range
-        :type  o_ipabaseid: int, min value -2147483648, max value 2147483647
+        :type  o_ipabaseid: int, min value 1, max value 4294967295
         :param o_ipaidrangesize: Number of IDs in the range
-        :type  o_ipaidrangesize: int, min value -2147483648, max value 2147483647
+        :type  o_ipaidrangesize: int, min value 1, max value 4294967295
         :param o_ipabaserid: First RID of the corresponding RID range
         :type  o_ipabaserid: int, min value -2147483648, max value 2147483647
         :param o_ipasecondarybaserid: First RID of the secondary RID range
@@ -12925,6 +13405,9 @@ class ClientMeta(Client):
         :type  o_ipanttrusteddomainsid: str
         :param o_iparangetype: ID range type, one of allowed values
         :type  o_iparangetype: str, valid values ['ipa-ad-trust', 'ipa-ad-trust-posix', 'ipa-local']
+        :param o_ipaautoprivategroups: Auto creation of private groups, one of
+            allowed values
+        :type  o_ipaautoprivategroups: str, valid values ['true', 'false', 'hybrid']
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
         :param o_sizelimit: Maximum number of entries returned (0 is
@@ -12960,6 +13443,8 @@ class ClientMeta(Client):
             _params['ipanttrusteddomainsid'] = o_ipanttrusteddomainsid
         if o_iparangetype is not None:
             _params['iparangetype'] = o_iparangetype
+        if o_ipaautoprivategroups is not None:
+            _params['ipaautoprivategroups'] = o_ipaautoprivategroups
         if o_timelimit is not None:
             _params['timelimit'] = o_timelimit
         if o_sizelimit is not None:
@@ -12980,6 +13465,7 @@ class ClientMeta(Client):
         o_ipaidrangesize=None,
         o_ipabaserid=None,
         o_ipasecondarybaserid=None,
+        o_ipaautoprivategroups=None,
         o_setattr=None,
         o_addattr=None,
         o_delattr=None,
@@ -12993,7 +13479,7 @@ class ClientMeta(Client):
         """
         Modify ID range.
 
-        =======
+        -------
         WARNING:
 
         DNA plugin in 389-ds will allocate IDs based on the ranges configured for the
@@ -13004,19 +13490,23 @@ class ClientMeta(Client):
         the new local range. Specifically, The dnaNextRange attribute of 'cn=Posix
         IDs,cn=Distributed Numeric Assignment Plugin,cn=plugins,cn=config' has to be
         modified to match the new range.
-        =======
+
+        -------
 
 
         :param a_cn: Range name
         :type  a_cn: str
         :param o_ipabaseid: First Posix ID of the range
-        :type  o_ipabaseid: int, min value -2147483648, max value 2147483647
+        :type  o_ipabaseid: int, min value 1, max value 4294967295
         :param o_ipaidrangesize: Number of IDs in the range
-        :type  o_ipaidrangesize: int, min value -2147483648, max value 2147483647
+        :type  o_ipaidrangesize: int, min value 1, max value 4294967295
         :param o_ipabaserid: First RID of the corresponding RID range
         :type  o_ipabaserid: int, min value -2147483648, max value 2147483647
         :param o_ipasecondarybaserid: First RID of the secondary RID range
         :type  o_ipasecondarybaserid: int, min value -2147483648, max value 2147483647
+        :param o_ipaautoprivategroups: Auto creation of private groups, one of
+            allowed values
+        :type  o_ipaautoprivategroups: str, valid values ['true', 'false', 'hybrid']
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -13055,6 +13545,8 @@ class ClientMeta(Client):
             _params['ipabaserid'] = o_ipabaserid
         if o_ipasecondarybaserid is not None:
             _params['ipasecondarybaserid'] = o_ipasecondarybaserid
+        if o_ipaautoprivategroups is not None:
+            _params['ipaautoprivategroups'] = o_ipaautoprivategroups
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -13550,6 +14042,8 @@ class ClientMeta(Client):
         o_krbauthindmaxrenewableage_pkinit=None,
         o_krbauthindmaxticketlife_hardened=None,
         o_krbauthindmaxrenewableage_hardened=None,
+        o_krbauthindmaxticketlife_idp=None,
+        o_krbauthindmaxrenewableage_idp=None,
         o_setattr=None,
         o_addattr=None,
         o_delattr=None,
@@ -13592,6 +14086,12 @@ class ClientMeta(Client):
         :param o_krbauthindmaxrenewableage_hardened: Hardened ticket maximum
             renewable age (seconds)
         :type  o_krbauthindmaxrenewableage_hardened: int, min value 1, max value 2147483647
+        :param o_krbauthindmaxticketlife_idp: External Identity Provider
+            ticket maximum ticket life (seconds)
+        :type  o_krbauthindmaxticketlife_idp: int, min value 1, max value 2147483647
+        :param o_krbauthindmaxrenewableage_idp: External Identity Provider
+            ticket maximum renewable age (seconds)
+        :type  o_krbauthindmaxrenewableage_idp: int, min value 1, max value 2147483647
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -13638,6 +14138,10 @@ class ClientMeta(Client):
             _params['krbauthindmaxticketlife_hardened'] = o_krbauthindmaxticketlife_hardened
         if o_krbauthindmaxrenewableage_hardened is not None:
             _params['krbauthindmaxrenewableage_hardened'] = o_krbauthindmaxrenewableage_hardened
+        if o_krbauthindmaxticketlife_idp is not None:
+            _params['krbauthindmaxticketlife_idp'] = o_krbauthindmaxticketlife_idp
+        if o_krbauthindmaxrenewableage_idp is not None:
+            _params['krbauthindmaxrenewableage_idp'] = o_krbauthindmaxrenewableage_idp
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -14772,7 +15276,7 @@ class ClientMeta(Client):
         :type  o_ipatokenotpalgorithm: str, valid values ['sha1', 'sha256', 'sha384', 'sha512']
         :param o_ipatokenotpdigits: Number of digits each token code will have
         :type  o_ipatokenotpdigits: int, valid values ['6', '8']
-        :param o_ipatokentotpclockoffset: TOTP token / FreeIPA server time
+        :param o_ipatokentotpclockoffset: TOTP token / IPA server time
             difference
         :type  o_ipatokentotpclockoffset: int, min value -2147483648, max value 2147483647
         :param o_ipatokentotptimestep: Length of TOTP token code validity
@@ -14975,7 +15479,7 @@ class ClientMeta(Client):
         :type  o_ipatokenotpalgorithm: str, valid values ['sha1', 'sha256', 'sha384', 'sha512']
         :param o_ipatokenotpdigits: Number of digits each token code will have
         :type  o_ipatokenotpdigits: int, valid values ['6', '8']
-        :param o_ipatokentotpclockoffset: TOTP token / FreeIPA server time
+        :param o_ipatokentotpclockoffset: TOTP token / IPA server time
             difference
         :type  o_ipatokentotpclockoffset: int, min value -2147483648, max value 2147483647
         :param o_ipatokentotptimestep: Length of TOTP token code validity
@@ -15417,7 +15921,7 @@ class ClientMeta(Client):
         :type  a_password: Password
         :param a_current_password: Current Password
         :type  a_current_password: Password
-        :param o_otp: One Time Password
+        :param o_otp: The OTP if the user has a token configured
         :type  o_otp: Password
         """
         method = 'passwd'
@@ -15472,7 +15976,7 @@ class ClientMeta(Client):
         :param o_attrs: All attributes to which the permission applies
         :type  o_attrs: str
         :param o_ipapermbindruletype: Bind rule type
-        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous']
+        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous', 'self']
         :param o_ipapermlocation: Subtree to apply permissions to
         :type  o_ipapermlocation: DNOrURL
         :param o_extratargetfilter: Extra target filter
@@ -15733,7 +16237,7 @@ class ClientMeta(Client):
             applies by default
         :type  o_ipapermdefaultattr: str
         :param o_ipapermbindruletype: Bind rule type
-        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous']
+        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous', 'self']
         :param o_ipapermlocation: Subtree to apply permissions to
         :type  o_ipapermlocation: DNOrURL
         :param o_extratargetfilter: Extra target filter
@@ -15887,7 +16391,7 @@ class ClientMeta(Client):
             permission explicitly does not apply
         :type  o_ipapermexcludedattr: str
         :param o_ipapermbindruletype: Bind rule type
-        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous']
+        :type  o_ipapermbindruletype: str, valid values ['permission', 'all', 'anonymous', 'self']
         :param o_ipapermlocation: Subtree to apply permissions to
         :type  o_ipapermlocation: DNOrURL
         :param o_extratargetfilter: Extra target filter
@@ -16624,6 +17128,11 @@ class ClientMeta(Client):
         o_krbpwdmaxfailure=None,
         o_krbpwdfailurecountinterval=None,
         o_krbpwdlockoutduration=None,
+        o_ipapwdmaxrepeat=None,
+        o_ipapwdmaxsequence=None,
+        o_ipapwddictcheck=None,
+        o_ipapwdusercheck=None,
+        o_passwordgracelimit=-1,
         o_setattr=None,
         o_addattr=None,
         o_all=True,
@@ -16657,6 +17166,19 @@ class ClientMeta(Client):
         :param o_krbpwdlockoutduration: Period for which lockout is enforced
             (seconds)
         :type  o_krbpwdlockoutduration: int, min value 0, max value 2147483647
+        :param o_ipapwdmaxrepeat: Maximum number of same consecutive
+            characters
+        :type  o_ipapwdmaxrepeat: int, min value 0, max value 256
+        :param o_ipapwdmaxsequence: The max. length of monotonic character
+            sequences (abcd)
+        :type  o_ipapwdmaxsequence: int, min value 0, max value 256
+        :param o_ipapwddictcheck: Check if the password is a dictionary word
+        :type  o_ipapwddictcheck: Bool
+        :param o_ipapwdusercheck: Check if the password contains the username
+        :type  o_ipapwdusercheck: Bool
+        :param o_passwordgracelimit: Number of LDAP authentications allowed
+            after expiration
+        :type  o_passwordgracelimit: int, min value -1, max value 2147483647
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -16694,6 +17216,16 @@ class ClientMeta(Client):
             _params['krbpwdfailurecountinterval'] = o_krbpwdfailurecountinterval
         if o_krbpwdlockoutduration is not None:
             _params['krbpwdlockoutduration'] = o_krbpwdlockoutduration
+        if o_ipapwdmaxrepeat is not None:
+            _params['ipapwdmaxrepeat'] = o_ipapwdmaxrepeat
+        if o_ipapwdmaxsequence is not None:
+            _params['ipapwdmaxsequence'] = o_ipapwdmaxsequence
+        if o_ipapwddictcheck is not None:
+            _params['ipapwddictcheck'] = o_ipapwddictcheck
+        if o_ipapwdusercheck is not None:
+            _params['ipapwdusercheck'] = o_ipapwdusercheck
+        if o_passwordgracelimit is not None:
+            _params['passwordgracelimit'] = o_passwordgracelimit
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -16745,6 +17277,11 @@ class ClientMeta(Client):
         o_krbpwdmaxfailure=None,
         o_krbpwdfailurecountinterval=None,
         o_krbpwdlockoutduration=None,
+        o_ipapwdmaxrepeat=None,
+        o_ipapwdmaxsequence=None,
+        o_ipapwddictcheck=None,
+        o_ipapwdusercheck=None,
+        o_passwordgracelimit=None,
         o_timelimit=None,
         o_sizelimit=None,
         o_all=True,
@@ -16781,6 +17318,19 @@ class ClientMeta(Client):
         :param o_krbpwdlockoutduration: Period for which lockout is enforced
             (seconds)
         :type  o_krbpwdlockoutduration: int, min value 0, max value 2147483647
+        :param o_ipapwdmaxrepeat: Maximum number of same consecutive
+            characters
+        :type  o_ipapwdmaxrepeat: int, min value 0, max value 256
+        :param o_ipapwdmaxsequence: The max. length of monotonic character
+            sequences (abcd)
+        :type  o_ipapwdmaxsequence: int, min value 0, max value 256
+        :param o_ipapwddictcheck: Check if the password is a dictionary word
+        :type  o_ipapwddictcheck: Bool
+        :param o_ipapwdusercheck: Check if the password contains the username
+        :type  o_ipapwdusercheck: Bool
+        :param o_passwordgracelimit: Number of LDAP authentications allowed
+            after expiration
+        :type  o_passwordgracelimit: int, min value -1, max value 2147483647
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
         :param o_sizelimit: Maximum number of entries returned (0 is
@@ -16822,6 +17372,16 @@ class ClientMeta(Client):
             _params['krbpwdfailurecountinterval'] = o_krbpwdfailurecountinterval
         if o_krbpwdlockoutduration is not None:
             _params['krbpwdlockoutduration'] = o_krbpwdlockoutduration
+        if o_ipapwdmaxrepeat is not None:
+            _params['ipapwdmaxrepeat'] = o_ipapwdmaxrepeat
+        if o_ipapwdmaxsequence is not None:
+            _params['ipapwdmaxsequence'] = o_ipapwdmaxsequence
+        if o_ipapwddictcheck is not None:
+            _params['ipapwddictcheck'] = o_ipapwddictcheck
+        if o_ipapwdusercheck is not None:
+            _params['ipapwdusercheck'] = o_ipapwdusercheck
+        if o_passwordgracelimit is not None:
+            _params['passwordgracelimit'] = o_passwordgracelimit
         if o_timelimit is not None:
             _params['timelimit'] = o_timelimit
         if o_sizelimit is not None:
@@ -16847,6 +17407,11 @@ class ClientMeta(Client):
         o_krbpwdmaxfailure=None,
         o_krbpwdfailurecountinterval=None,
         o_krbpwdlockoutduration=None,
+        o_ipapwdmaxrepeat=None,
+        o_ipapwdmaxsequence=None,
+        o_ipapwddictcheck=None,
+        o_ipapwdusercheck=None,
+        o_passwordgracelimit=None,
         o_setattr=None,
         o_addattr=None,
         o_delattr=None,
@@ -16882,6 +17447,19 @@ class ClientMeta(Client):
         :param o_krbpwdlockoutduration: Period for which lockout is enforced
             (seconds)
         :type  o_krbpwdlockoutduration: int, min value 0, max value 2147483647
+        :param o_ipapwdmaxrepeat: Maximum number of same consecutive
+            characters
+        :type  o_ipapwdmaxrepeat: int, min value 0, max value 256
+        :param o_ipapwdmaxsequence: The max. length of monotonic character
+            sequences (abcd)
+        :type  o_ipapwdmaxsequence: int, min value 0, max value 256
+        :param o_ipapwddictcheck: Check if the password is a dictionary word
+        :type  o_ipapwddictcheck: Bool
+        :param o_ipapwdusercheck: Check if the password contains the username
+        :type  o_ipapwdusercheck: Bool
+        :param o_passwordgracelimit: Number of LDAP authentications allowed
+            after expiration
+        :type  o_passwordgracelimit: int, min value -1, max value 2147483647
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -16926,6 +17504,16 @@ class ClientMeta(Client):
             _params['krbpwdfailurecountinterval'] = o_krbpwdfailurecountinterval
         if o_krbpwdlockoutduration is not None:
             _params['krbpwdlockoutduration'] = o_krbpwdlockoutduration
+        if o_ipapwdmaxrepeat is not None:
+            _params['ipapwdmaxrepeat'] = o_ipapwdmaxrepeat
+        if o_ipapwdmaxsequence is not None:
+            _params['ipapwdmaxsequence'] = o_ipapwdmaxsequence
+        if o_ipapwddictcheck is not None:
+            _params['ipapwddictcheck'] = o_ipapwddictcheck
+        if o_ipapwdusercheck is not None:
+            _params['ipapwdusercheck'] = o_ipapwdusercheck
+        if o_passwordgracelimit is not None:
+            _params['passwordgracelimit'] = o_passwordgracelimit
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -17494,6 +18082,7 @@ class ClientMeta(Client):
         o_host=None,
         o_hostgroup=None,
         o_service=None,
+        o_idoverrideuser=None,
         **kwargs
     ):
         """
@@ -17520,6 +18109,8 @@ class ClientMeta(Client):
         :type  o_hostgroup: str
         :param o_service: services to add
         :type  o_service: str
+        :param o_idoverrideuser: User ID overrides to add
+        :type  o_idoverrideuser: str
         """
         method = 'role_add_member'
 
@@ -17540,6 +18131,8 @@ class ClientMeta(Client):
             _params['hostgroup'] = o_hostgroup
         if o_service is not None:
             _params['service'] = o_service
+        if o_idoverrideuser is not None:
+            _params['idoverrideuser'] = o_idoverrideuser
 
         _params.update(kwargs)
 
@@ -17760,6 +18353,7 @@ class ClientMeta(Client):
         o_host=None,
         o_hostgroup=None,
         o_service=None,
+        o_idoverrideuser=None,
         **kwargs
     ):
         """
@@ -17786,6 +18380,8 @@ class ClientMeta(Client):
         :type  o_hostgroup: str
         :param o_service: services to remove
         :type  o_service: str
+        :param o_idoverrideuser: User ID overrides to remove
+        :type  o_idoverrideuser: str
         """
         method = 'role_remove_member'
 
@@ -17806,6 +18402,8 @@ class ClientMeta(Client):
             _params['hostgroup'] = o_hostgroup
         if o_service is not None:
             _params['service'] = o_service
+        if o_idoverrideuser is not None:
+            _params['idoverrideuser'] = o_idoverrideuser
 
         _params.update(kwargs)
 
@@ -19120,13 +19718,13 @@ class ClientMeta(Client):
             types. Use 'NONE' to disable PAC support for this service, e.g. this
             might be necessary for NFS services.
         :type  o_ipakrbauthzdata: list of str, valid values ['MS-PAC', 'PAD', 'NONE']
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
             force hardened password authentication by SPAKE or FAST. With no
             indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_ipakrbrequirespreauth: Pre-authentication is required for the
             service
         :type  o_ipakrbrequirespreauth: Bool
@@ -19693,13 +20291,13 @@ class ClientMeta(Client):
             types. Use 'NONE' to disable PAC support for this service, e.g. this
             might be necessary for NFS services.
         :type  o_ipakrbauthzdata: list of str, valid values ['MS-PAC', 'PAD', 'NONE']
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
             force hardened password authentication by SPAKE or FAST. With no
             indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
         :param o_sizelimit: Maximum number of entries returned (0 is
@@ -19787,13 +20385,13 @@ class ClientMeta(Client):
             types. Use 'NONE' to disable PAC support for this service, e.g. this
             might be necessary for NFS services.
         :type  o_ipakrbauthzdata: list of str, valid values ['MS-PAC', 'PAD', 'NONE']
-        :param o_krbprincipalauthind: Defines a whitelist for Authentication
+        :param o_krbprincipalauthind: Defines an allow list for Authentication
             Indicators. Use 'otp' to allow OTP-based 2FA authentications. Use
             'radius' to allow RADIUS-based 2FA authentications. Use 'pkinit' to
             allow PKINIT-based 2FA authentications. Use 'hardened' to allow brute-
             force hardened password authentication by SPAKE or FAST. With no
             indicator specified, all authentication mechanisms are allowed.
-        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened']
+        :type  o_krbprincipalauthind: list of str, valid values ['radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_ipakrbrequirespreauth: Pre-authentication is required for the
             service
         :type  o_ipakrbrequirespreauth: Bool
@@ -20730,6 +21328,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -20809,7 +21409,7 @@ class ClientMeta(Client):
         :param o_ipasshpubkey: SSH public key
         :type  o_ipasshpubkey: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -20817,6 +21417,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -20914,6 +21518,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -21180,6 +21788,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -21188,7 +21798,7 @@ class ClientMeta(Client):
         o_ipantlogonscript=None,
         o_ipantprofilepath=None,
         o_ipanthomedirectory=None,
-        o_ipanthomedirectoryrive=None,
+        o_ipanthomedirectorydrive=None,
         o_timelimit=None,
         o_sizelimit=None,
         o_all=True,
@@ -21205,6 +21815,8 @@ class ClientMeta(Client):
         o_not_in_hbacrule=None,
         o_in_sudorule=None,
         o_not_in_sudorule=None,
+        o_in_subid=None,
+        o_not_in_subid=None,
         **kwargs
     ):
         """
@@ -21271,7 +21883,7 @@ class ClientMeta(Client):
         :param o_carlicense: Car License
         :type  o_carlicense: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -21279,6 +21891,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -21295,8 +21911,8 @@ class ClientMeta(Client):
         :type  o_ipantprofilepath: str
         :param o_ipanthomedirectory: SMB Home Directory
         :type  o_ipanthomedirectory: str
-        :param o_ipanthomedirectoryrive: SMB Home Directory Drive
-        :type  o_ipanthomedirectoryrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
+        :param o_ipanthomedirectorydrive: SMB Home Directory Drive
+        :type  o_ipanthomedirectorydrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
         :param o_sizelimit: Maximum number of entries returned (0 is
@@ -21341,6 +21957,12 @@ class ClientMeta(Client):
         :param o_not_in_sudorule: Search for stage users without these member
             of sudo rules.
         :type  o_not_in_sudorule: str
+        :param o_in_subid: Search for stage users with these member of
+            Subordinate ids.
+        :type  o_in_subid: str
+        :param o_not_in_subid: Search for stage users without these member of
+            Subordinate ids.
+        :type  o_not_in_subid: str
         """
         method = 'stageuser_find'
 
@@ -21412,6 +22034,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -21428,8 +22054,8 @@ class ClientMeta(Client):
             _params['ipantprofilepath'] = o_ipantprofilepath
         if o_ipanthomedirectory is not None:
             _params['ipanthomedirectory'] = o_ipanthomedirectory
-        if o_ipanthomedirectoryrive is not None:
-            _params['ipanthomedirectoryrive'] = o_ipanthomedirectoryrive
+        if o_ipanthomedirectorydrive is not None:
+            _params['ipanthomedirectorydrive'] = o_ipanthomedirectorydrive
         if o_timelimit is not None:
             _params['timelimit'] = o_timelimit
         if o_sizelimit is not None:
@@ -21459,6 +22085,10 @@ class ClientMeta(Client):
             _params['in_sudorule'] = o_in_sudorule
         if o_not_in_sudorule is not None:
             _params['not_in_sudorule'] = o_not_in_sudorule
+        if o_in_subid is not None:
+            _params['in_subid'] = o_in_subid
+        if o_not_in_subid is not None:
+            _params['not_in_subid'] = o_not_in_subid
 
         _params.update(kwargs)
 
@@ -21500,6 +22130,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -21508,7 +22140,7 @@ class ClientMeta(Client):
         o_ipantlogonscript=None,
         o_ipantprofilepath=None,
         o_ipanthomedirectory=None,
-        o_ipanthomedirectoryrive=None,
+        o_ipanthomedirectorydrive=None,
         o_setattr=None,
         o_addattr=None,
         o_delattr=None,
@@ -21585,7 +22217,7 @@ class ClientMeta(Client):
         :param o_ipasshpubkey: SSH public key
         :type  o_ipasshpubkey: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -21593,6 +22225,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -21609,8 +22245,8 @@ class ClientMeta(Client):
         :type  o_ipantprofilepath: str
         :param o_ipanthomedirectory: SMB Home Directory
         :type  o_ipanthomedirectory: str
-        :param o_ipanthomedirectoryrive: SMB Home Directory Drive
-        :type  o_ipanthomedirectoryrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
+        :param o_ipanthomedirectorydrive: SMB Home Directory Drive
+        :type  o_ipanthomedirectorydrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
         :param o_setattr: Set an attribute to a name/value pair. Format is
             attr=value. For multi-valued attributes, the command replaces the
             values already present.
@@ -21707,6 +22343,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -21723,8 +22363,8 @@ class ClientMeta(Client):
             _params['ipantprofilepath'] = o_ipantprofilepath
         if o_ipanthomedirectory is not None:
             _params['ipanthomedirectory'] = o_ipanthomedirectory
-        if o_ipanthomedirectoryrive is not None:
-            _params['ipanthomedirectoryrive'] = o_ipanthomedirectoryrive
+        if o_ipanthomedirectorydrive is not None:
+            _params['ipanthomedirectorydrive'] = o_ipanthomedirectorydrive
         if o_setattr is not None:
             _params['setattr'] = o_setattr
         if o_addattr is not None:
@@ -21959,6 +22599,388 @@ class ClientMeta(Client):
         _params['all'] = o_all
         _params['raw'] = o_raw
         _params['no_members'] = o_no_members
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_add(
+        self,
+        o_ipaowner,
+        a_ipauniqueid=None,
+        o_description=None,
+        o_ipasubuidnumber=None,
+        o_setattr=None,
+        o_addattr=None,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Add a new subordinate id.
+
+
+        :param a_ipauniqueid: Unique ID
+        :type  a_ipauniqueid: str
+        :param o_description: Subordinate id description
+        :type  o_description: str
+        :param o_ipaowner: Owning user of subordinate id entry
+        :type  o_ipaowner: str
+        :param o_ipasubuidnumber: Start value for subordinate user ID (subuid)
+            range
+        :type  o_ipasubuidnumber: int, min value 2147483648, max value 4294836224
+        :param o_setattr: Set an attribute to a name/value pair. Format is
+            attr=value. For multi-valued attributes, the command replaces the
+            values already present.
+        :type  o_setattr: str
+        :param o_addattr: Add an attribute/value pair. Format is attr=value.
+            The attribute must be part of the schema.
+        :type  o_addattr: str
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'subid_add'
+
+        _args = list()
+        _args.append(a_ipauniqueid)
+
+        _params = dict()
+        if o_description is not None:
+            _params['description'] = o_description
+        _params['ipaowner'] = o_ipaowner
+        if o_ipasubuidnumber is not None:
+            _params['ipasubuidnumber'] = o_ipasubuidnumber
+        if o_setattr is not None:
+            _params['setattr'] = o_setattr
+        if o_addattr is not None:
+            _params['addattr'] = o_addattr
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_del(
+        self,
+        a_ipauniqueid,
+        o_continue=False,
+        **kwargs
+    ):
+        """
+        Delete a subordinate id.
+
+
+        :param a_ipauniqueid: Unique ID
+        :type  a_ipauniqueid: str
+        :param o_continue: Continuous mode: Don't stop on errors.
+        :type  o_continue: bool
+        """
+        method = 'subid_del'
+
+        _args = list()
+        _args.append(a_ipauniqueid)
+
+        _params = dict()
+        _params['continue'] = o_continue
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_find(
+        self,
+        a_criteria=None,
+        o_ipauniqueid=None,
+        o_description=None,
+        o_ipaowner=None,
+        o_ipasubuidnumber=None,
+        o_ipasubgidnumber=None,
+        o_timelimit=None,
+        o_sizelimit=None,
+        o_all=True,
+        o_raw=False,
+        o_pkey_only=False,
+        **kwargs
+    ):
+        """
+        Search for subordinate id.
+
+
+        :param a_criteria: A string searched in all relevant object attributes
+        :type  a_criteria: str
+        :param o_ipauniqueid: Unique ID
+        :type  o_ipauniqueid: str
+        :param o_description: Subordinate id description
+        :type  o_description: str
+        :param o_ipaowner: Owning user of subordinate id entry
+        :type  o_ipaowner: str
+        :param o_ipasubuidnumber: Start value for subordinate user ID (subuid)
+            range
+        :type  o_ipasubuidnumber: int, min value 2147483648, max value 4294836224
+        :param o_ipasubgidnumber: Start value for subordinate group ID
+            (subgid) range
+        :type  o_ipasubgidnumber: int, min value 2147483648, max value 4294836224
+        :param o_timelimit: Time limit of search in seconds (0 is unlimited)
+        :type  o_timelimit: int, min value 0, max value 2147483647
+        :param o_sizelimit: Maximum number of entries returned (0 is
+            unlimited)
+        :type  o_sizelimit: int, min value 0, max value 2147483647
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        :param o_pkey_only: Results should contain primary key attribute only
+            ("id")
+        :type  o_pkey_only: bool
+        """
+        method = 'subid_find'
+
+        _args = list()
+        _args.append(a_criteria)
+
+        _params = dict()
+        if o_ipauniqueid is not None:
+            _params['ipauniqueid'] = o_ipauniqueid
+        if o_description is not None:
+            _params['description'] = o_description
+        if o_ipaowner is not None:
+            _params['ipaowner'] = o_ipaowner
+        if o_ipasubuidnumber is not None:
+            _params['ipasubuidnumber'] = o_ipasubuidnumber
+        if o_ipasubgidnumber is not None:
+            _params['ipasubgidnumber'] = o_ipasubgidnumber
+        if o_timelimit is not None:
+            _params['timelimit'] = o_timelimit
+        if o_sizelimit is not None:
+            _params['sizelimit'] = o_sizelimit
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+        if o_pkey_only is not None:
+            _params['pkey_only'] = o_pkey_only
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_generate(
+        self,
+        o_ipaowner=None,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Generate and auto-assign subuid and subgid range to user entry
+
+
+        :param o_ipaowner: Owning user of subordinate id entry
+        :type  o_ipaowner: str
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'subid_generate'
+
+        _args = list()
+
+        _params = dict()
+        if o_ipaowner is not None:
+            _params['ipaowner'] = o_ipaowner
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_match(
+        self,
+        o_ipasubuidnumber,
+        a_criteria=None,
+        o_timelimit=None,
+        o_sizelimit=None,
+        o_all=True,
+        o_raw=False,
+        o_pkey_only=False,
+        **kwargs
+    ):
+        """
+        Match users by any subordinate uid in their range
+
+
+        :param a_criteria: A string searched in all relevant object attributes
+        :type  a_criteria: str
+        :param o_ipasubuidnumber: Match value for subordinate user ID
+        :type  o_ipasubuidnumber: int, min value 2147483648, max value 4294836224
+        :param o_timelimit: Time limit of search in seconds (0 is unlimited)
+        :type  o_timelimit: int, min value 0, max value 2147483647
+        :param o_sizelimit: Maximum number of entries returned (0 is
+            unlimited)
+        :type  o_sizelimit: int, min value 0, max value 2147483647
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        :param o_pkey_only: Results should contain primary key attribute only
+            ("id")
+        :type  o_pkey_only: bool
+        """
+        method = 'subid_match'
+
+        _args = list()
+        _args.append(a_criteria)
+
+        _params = dict()
+        _params['ipasubuidnumber'] = o_ipasubuidnumber
+        if o_timelimit is not None:
+            _params['timelimit'] = o_timelimit
+        if o_sizelimit is not None:
+            _params['sizelimit'] = o_sizelimit
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+        if o_pkey_only is not None:
+            _params['pkey_only'] = o_pkey_only
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_mod(
+        self,
+        a_ipauniqueid,
+        o_description=None,
+        o_setattr=None,
+        o_addattr=None,
+        o_delattr=None,
+        o_rights=False,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Modify a subordinate id.
+
+
+        :param a_ipauniqueid: Unique ID
+        :type  a_ipauniqueid: str
+        :param o_description: Subordinate id description
+        :type  o_description: str
+        :param o_setattr: Set an attribute to a name/value pair. Format is
+            attr=value. For multi-valued attributes, the command replaces the
+            values already present.
+        :type  o_setattr: str
+        :param o_addattr: Add an attribute/value pair. Format is attr=value.
+            The attribute must be part of the schema.
+        :type  o_addattr: str
+        :param o_delattr: Delete an attribute/value pair. The option will be
+            evaluated last, after all sets and adds.
+        :type  o_delattr: str
+        :param o_rights: Display the access rights of this entry (requires
+            --all). See ipa man page for details.
+        :type  o_rights: bool
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'subid_mod'
+
+        _args = list()
+        _args.append(a_ipauniqueid)
+
+        _params = dict()
+        if o_description is not None:
+            _params['description'] = o_description
+        if o_setattr is not None:
+            _params['setattr'] = o_setattr
+        if o_addattr is not None:
+            _params['addattr'] = o_addattr
+        if o_delattr is not None:
+            _params['delattr'] = o_delattr
+        _params['rights'] = o_rights
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_show(
+        self,
+        a_ipauniqueid,
+        o_rights=False,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Display information about a subordinate id.
+
+
+        :param a_ipauniqueid: Unique ID
+        :type  a_ipauniqueid: str
+        :param o_rights: Display the access rights of this entry (requires
+            --all). See ipa man page for details.
+        :type  o_rights: bool
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'subid_show'
+
+        _args = list()
+        _args.append(a_ipauniqueid)
+
+        _params = dict()
+        _params['rights'] = o_rights
+        _params['all'] = o_all
+        _params['raw'] = o_raw
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
+    def subid_stats(
+        self,
+        o_all=True,
+        o_raw=False,
+        **kwargs
+    ):
+        """
+        Subordinate id statistics
+
+
+        :param o_all: Retrieve and print all attributes from the server.
+            Affects command output.
+        :type  o_all: bool
+        :param o_raw: Print entries as stored on the server. Only affects
+            output format.
+        :type  o_raw: bool
+        """
+        method = 'subid_stats'
+
+        _args = list()
+
+        _params = dict()
+        _params['all'] = o_all
+        _params['raw'] = o_raw
 
         _params.update(kwargs)
 
@@ -24586,6 +25608,34 @@ class ClientMeta(Client):
 
         return self._request(method, _args, _params)
 
+    def trust_enable_agent(
+        self,
+        a_remote_cn,
+        o_enable_compat=False,
+        **kwargs
+    ):
+        """
+        Configure this server as a trust agent.
+
+
+        :param a_remote_cn: Remote IPA server hostname
+        :type  a_remote_cn: str
+        :param o_enable_compat: Enable support for trusted domains for old
+            clients
+        :type  o_enable_compat: bool
+        """
+        method = 'trust_enable_agent'
+
+        _args = list()
+        _args.append(a_remote_cn)
+
+        _params = dict()
+        _params['enable_compat'] = o_enable_compat
+
+        _params.update(kwargs)
+
+        return self._request(method, _args, _params)
+
     def trust_fetch_domains(
         self,
         a_cn,
@@ -24668,9 +25718,9 @@ class ClientMeta(Client):
         :type  o_ipantflatname: str
         :param o_ipanttrusteddomainsid: Domain Security Identifier
         :type  o_ipanttrusteddomainsid: str
-        :param o_ipantsidblacklistincoming: SID blacklist incoming
+        :param o_ipantsidblacklistincoming: SID blocklist incoming
         :type  o_ipantsidblacklistincoming: str
-        :param o_ipantsidblacklistoutgoing: SID blacklist outgoing
+        :param o_ipantsidblacklistoutgoing: SID blocklist outgoing
         :type  o_ipantsidblacklistoutgoing: str
         :param o_timelimit: Time limit of search in seconds (0 is unlimited)
         :type  o_timelimit: int, min value 0, max value 2147483647
@@ -24739,9 +25789,9 @@ class ClientMeta(Client):
 
         :param a_cn: Realm name
         :type  a_cn: str
-        :param o_ipantsidblacklistincoming: SID blacklist incoming
+        :param o_ipantsidblacklistincoming: SID blocklist incoming
         :type  o_ipantsidblacklistincoming: str
-        :param o_ipantsidblacklistoutgoing: SID blacklist outgoing
+        :param o_ipantsidblacklistoutgoing: SID blocklist outgoing
         :type  o_ipantsidblacklistoutgoing: str
         :param o_ipantadditionalsuffixes: UPN suffixes
         :type  o_ipantadditionalsuffixes: str
@@ -25291,6 +26341,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -25371,7 +26423,7 @@ class ClientMeta(Client):
         :param o_ipasshpubkey: SSH public key
         :type  o_ipasshpubkey: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -25379,6 +26431,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -25478,6 +26534,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -25796,6 +26856,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -25804,7 +26866,7 @@ class ClientMeta(Client):
         o_ipantlogonscript=None,
         o_ipantprofilepath=None,
         o_ipanthomedirectory=None,
-        o_ipanthomedirectoryrive=None,
+        o_ipanthomedirectorydrive=None,
         o_nsaccountlock=None,
         o_preserved=None,
         o_timelimit=None,
@@ -25824,6 +26886,8 @@ class ClientMeta(Client):
         o_not_in_hbacrule=None,
         o_in_sudorule=None,
         o_not_in_sudorule=None,
+        o_in_subid=None,
+        o_not_in_subid=None,
         **kwargs
     ):
         """
@@ -25890,7 +26954,7 @@ class ClientMeta(Client):
         :param o_carlicense: Car License
         :type  o_carlicense: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -25898,6 +26962,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -25914,8 +26982,8 @@ class ClientMeta(Client):
         :type  o_ipantprofilepath: str
         :param o_ipanthomedirectory: SMB Home Directory
         :type  o_ipanthomedirectory: str
-        :param o_ipanthomedirectoryrive: SMB Home Directory Drive
-        :type  o_ipanthomedirectoryrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
+        :param o_ipanthomedirectorydrive: SMB Home Directory Drive
+        :type  o_ipanthomedirectorydrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
         :param o_nsaccountlock: Account disabled
         :type  o_nsaccountlock: Bool
         :param o_preserved: Preserved user
@@ -25964,6 +27032,12 @@ class ClientMeta(Client):
         :param o_not_in_sudorule: Search for users without these member of
             sudo rules.
         :type  o_not_in_sudorule: str
+        :param o_in_subid: Search for users with these member of Subordinate
+            ids.
+        :type  o_in_subid: str
+        :param o_not_in_subid: Search for users without these member of
+            Subordinate ids.
+        :type  o_not_in_subid: str
         """
         method = 'user_find'
 
@@ -26035,6 +27109,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -26051,8 +27129,8 @@ class ClientMeta(Client):
             _params['ipantprofilepath'] = o_ipantprofilepath
         if o_ipanthomedirectory is not None:
             _params['ipanthomedirectory'] = o_ipanthomedirectory
-        if o_ipanthomedirectoryrive is not None:
-            _params['ipanthomedirectoryrive'] = o_ipanthomedirectoryrive
+        if o_ipanthomedirectorydrive is not None:
+            _params['ipanthomedirectorydrive'] = o_ipanthomedirectorydrive
         if o_nsaccountlock is not None:
             _params['nsaccountlock'] = o_nsaccountlock
         if o_preserved is not None:
@@ -26087,6 +27165,10 @@ class ClientMeta(Client):
             _params['in_sudorule'] = o_in_sudorule
         if o_not_in_sudorule is not None:
             _params['not_in_sudorule'] = o_not_in_sudorule
+        if o_in_subid is not None:
+            _params['in_subid'] = o_in_subid
+        if o_not_in_subid is not None:
+            _params['not_in_subid'] = o_not_in_subid
 
         _params.update(kwargs)
 
@@ -26128,6 +27210,8 @@ class ClientMeta(Client):
         o_userclass=None,
         o_ipatokenradiusconfiglink=None,
         o_ipatokenradiususername=None,
+        o_ipaidpconfiglink=None,
+        o_ipaidpsub=None,
         o_departmentnumber=None,
         o_employeenumber=None,
         o_employeetype=None,
@@ -26136,7 +27220,7 @@ class ClientMeta(Client):
         o_ipantlogonscript=None,
         o_ipantprofilepath=None,
         o_ipanthomedirectory=None,
-        o_ipanthomedirectoryrive=None,
+        o_ipanthomedirectorydrive=None,
         o_nsaccountlock=None,
         o_setattr=None,
         o_addattr=None,
@@ -26214,7 +27298,7 @@ class ClientMeta(Client):
         :param o_ipasshpubkey: SSH public key
         :type  o_ipasshpubkey: str
         :param o_ipauserauthtype: Types of supported user authentication
-        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened']
+        :type  o_ipauserauthtype: list of str, valid values ['password', 'radius', 'otp', 'pkinit', 'hardened', 'idp']
         :param o_userclass: User category (semantics placed on this attribute
             are for local interpretation)
         :type  o_userclass: str
@@ -26222,6 +27306,10 @@ class ClientMeta(Client):
         :type  o_ipatokenradiusconfiglink: str
         :param o_ipatokenradiususername: RADIUS proxy username
         :type  o_ipatokenradiususername: str
+        :param o_ipaidpconfiglink: External IdP configuration
+        :type  o_ipaidpconfiglink: str
+        :param o_ipaidpsub: A string that identifies the user at external IdP
+        :type  o_ipaidpsub: str
         :param o_departmentnumber: Department Number
         :type  o_departmentnumber: str
         :param o_employeenumber: Employee Number
@@ -26238,8 +27326,8 @@ class ClientMeta(Client):
         :type  o_ipantprofilepath: str
         :param o_ipanthomedirectory: SMB Home Directory
         :type  o_ipanthomedirectory: str
-        :param o_ipanthomedirectoryrive: SMB Home Directory Drive
-        :type  o_ipanthomedirectoryrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
+        :param o_ipanthomedirectorydrive: SMB Home Directory Drive
+        :type  o_ipanthomedirectorydrive: str, valid values ['A:', 'B:', 'C:', 'D:', 'E:', 'F:', 'G:', 'H:', 'I:', 'J:', 'K:', 'L:', 'M:', 'N:', 'O:', 'P:', 'Q:', 'R:', 'S:', 'T:', 'U:', 'V:', 'W:', 'X:', 'Y:', 'Z:']
         :param o_nsaccountlock: Account disabled
         :type  o_nsaccountlock: Bool
         :param o_setattr: Set an attribute to a name/value pair. Format is
@@ -26338,6 +27426,10 @@ class ClientMeta(Client):
             _params['ipatokenradiusconfiglink'] = o_ipatokenradiusconfiglink
         if o_ipatokenradiususername is not None:
             _params['ipatokenradiususername'] = o_ipatokenradiususername
+        if o_ipaidpconfiglink is not None:
+            _params['ipaidpconfiglink'] = o_ipaidpconfiglink
+        if o_ipaidpsub is not None:
+            _params['ipaidpsub'] = o_ipaidpsub
         if o_departmentnumber is not None:
             _params['departmentnumber'] = o_departmentnumber
         if o_employeenumber is not None:
@@ -26354,8 +27446,8 @@ class ClientMeta(Client):
             _params['ipantprofilepath'] = o_ipantprofilepath
         if o_ipanthomedirectory is not None:
             _params['ipanthomedirectory'] = o_ipanthomedirectory
-        if o_ipanthomedirectoryrive is not None:
-            _params['ipanthomedirectoryrive'] = o_ipanthomedirectoryrive
+        if o_ipanthomedirectorydrive is not None:
+            _params['ipanthomedirectorydrive'] = o_ipanthomedirectorydrive
         if o_nsaccountlock is not None:
             _params['nsaccountlock'] = o_nsaccountlock
         if o_setattr is not None:
@@ -26960,6 +28052,7 @@ class ClientMeta(Client):
         o_service=None,
         o_shared=False,
         o_username=None,
+        o_wrapping_algo='des-ede3-cbc',
         o_all=True,
         o_raw=False,
         **kwargs
@@ -26982,6 +28075,8 @@ class ClientMeta(Client):
         :type  o_vault_data: Bytes
         :param o_nonce: Nonce
         :type  o_nonce: Bytes
+        :param o_wrapping_algo: Key wrapping algorithm
+        :type  o_wrapping_algo: str, valid values ['aes-128-cbc', 'des-ede3-cbc']
         :param o_all: Retrieve and print all attributes from the server.
             Affects command output.
         :type  o_all: bool
@@ -27004,6 +28099,8 @@ class ClientMeta(Client):
         _params['session_key'] = o_session_key
         _params['vault_data'] = o_vault_data
         _params['nonce'] = o_nonce
+        if o_wrapping_algo is not None:
+            _params['wrapping_algo'] = o_wrapping_algo
         _params['all'] = o_all
         _params['raw'] = o_raw
 
@@ -27384,6 +28481,7 @@ class ClientMeta(Client):
         o_service=None,
         o_shared=False,
         o_username=None,
+        o_wrapping_algo='des-ede3-cbc',
         o_all=True,
         o_raw=False,
         **kwargs
@@ -27402,6 +28500,8 @@ class ClientMeta(Client):
         :type  o_username: str
         :param o_session_key: Session key wrapped with transport certificate
         :type  o_session_key: Bytes
+        :param o_wrapping_algo: Key wrapping algorithm
+        :type  o_wrapping_algo: str, valid values ['aes-128-cbc', 'des-ede3-cbc']
         :param o_all: Retrieve and print all attributes from the server.
             Affects command output.
         :type  o_all: bool
@@ -27422,6 +28522,8 @@ class ClientMeta(Client):
         if o_username is not None:
             _params['username'] = o_username
         _params['session_key'] = o_session_key
+        if o_wrapping_algo is not None:
+            _params['wrapping_algo'] = o_wrapping_algo
         _params['all'] = o_all
         _params['raw'] = o_raw
 
