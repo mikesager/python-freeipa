@@ -1,3 +1,48 @@
+[project]
+name = "python-freeipa-alt"
+version = "1.0.6"
+authors = [
+  { name = "Mike Sager", email = "mike@mikesager.name" },
+]
+description = "Lightweight FreeIPA client"
+readme = "README.rst"
+
+dependencies = [
+  "requests",
+]
+
+classifiers = [
+  'Intended Audience :: Developers',
+  'License :: OSI Approved :: MIT License',
+  'Operating System :: OS Independent',
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 2.7',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3.6',
+  'Topic :: Software Development :: Libraries',
+  'Topic :: Software Development :: Libraries :: Python Modules',
+  'Topic :: System :: Systems Administration :: Authentication/Directory',
+]
+
+
+
+[project.urls]
+Repository = "https://gitea.g4c.thegrateful.org/sagerm/python-freeipa-alt"
+
+
+
+[project.optional-dependencies]
+tests = ["responses"]
+
+
+
 [tool.black]
 line-length = 88
 skip-string-normalization = true
+
+
+
+#[build-system]
+#requires = ["setuptools"]
+#build-backend = "setuptools.build_meta"
+##build-backend = "setuptools.build_meta:__legacy__"
